@@ -1,6 +1,7 @@
 import React from 'react';
 
-class Book extends React.Component {
+class Book extends React.PureComponent {
+
     handleChange = (evt, book) => {
         this.props.updateBookshelf(evt.target.value, book)
     }

@@ -3,25 +3,27 @@ import {Link} from "react-router-dom"
 import {DebounceInput} from "react-debounce-input";
 import Bookshelf from './Bookshelf'
 import * as BooksAPI from '../api/BooksAPI'
+import { updateBooks } from "../utils";
+
 
 class Search extends React.Component {
     state = {
         searchedBooks: []
     }
 
-    searchBooks = (evt) => {
-        if (evt.target.value !== '') {
-            BooksAPI
-                .search(evt.target.value)
-                .then(response => {
-                    if (response.hasOwnProperty('error')) {
-                        this.setState({searchedBooks: []})
-                    } else {
-                        this.setState({searchedBooks: response})
-                    }
-                })
-        } else {
-            this.setState({searchedBooks: []})
+    searchBooks = async evt => {
+        let searchedBooks = [];
+
+        if (evt.target.value) {
+            const books = await BooksAPI.search(evt.target.value)
+            searchedBooks = books && !books.hasOwnProperty('error') ? books : []
+
+            const updateBookState = updateBooks(searchedBooks)
+            this.props.bookshelfBooks.forEach(book => {
+                updateBookState(book)
+            })
+
+            this.setState({ searchedBooks })
         }
     }
 

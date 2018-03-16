@@ -3,6 +3,7 @@ import {Link, Route} from "react-router-dom"
 import Bookshelf from './components/Bookshelf'
 import Search from './components/Search'
 import * as BooksAPI from './api/BooksAPI'
+import { filterBooks } from "./utils";
 import './App.css'
 
 class BooksApp extends React.Component {
@@ -16,13 +17,14 @@ class BooksApp extends React.Component {
         this.loadBooks()
     }
 
-    loadBooks = () => {
-        BooksAPI.getAll()
-                .then(response => {
-                    this.setState({ currentlyReading: response.filter(book => book.shelf === "currentlyReading") })
-                    this.setState({ wantToRead: response.filter(book => book.shelf === "wantToRead") })
-                    this.setState({ read: response.filter(book => book.shelf === "read") })
-                })
+    loadBooks = async () => {
+        const books = await BooksAPI.getAll()
+        const filterBy = filterBooks(books)
+        this.setState({
+            currentlyReading: filterBy("currentlyReading"),
+            wantToRead: filterBy("wantToRead"),
+            read: filterBy("read")
+        })
     }
 
     updateBook = (shelf, book) => {
@@ -31,6 +33,7 @@ class BooksApp extends React.Component {
     }
 
     render() {
+        const { currentlyReading, wantToRead, read } = this.state
         return (
             <div className="app">
                 <Route exact path="/" render={() => (
@@ -40,9 +43,9 @@ class BooksApp extends React.Component {
                         </div>
                         <div className="list-books-content">
                             <div>
-                                <Bookshelf books={this.state.currentlyReading} title="Currently Reading" updateBookshelf={this.updateBook} />
-                                <Bookshelf books={this.state.wantToRead} title="Want to Read" updateBookshelf={this.updateBook} />
-                                <Bookshelf books={this.state.read} title="Read" updateBookshelf={this.updateBook} />
+                                <Bookshelf books={currentlyReading} title="Currently Reading" updateBookshelf={this.updateBook} />
+                                <Bookshelf books={wantToRead} title="Want to Read" updateBookshelf={this.updateBook} />
+                                <Bookshelf books={read} title="Read" updateBookshelf={this.updateBook} />
                             </div>
                         </div>
                         <div className="open-search">
@@ -52,7 +55,7 @@ class BooksApp extends React.Component {
                 )}/>
 
                 <Route path="/search" render={() => (
-                    <Search updateBookshelf={this.updateBook} />
+                    <Search updateBookshelf={this.updateBook} bookshelfBooks={currentlyReading.concat(wantToRead, read)}/>
                 )}/>
             </div>
         )
